@@ -6,11 +6,20 @@ BASE_URL = "http://localhost:8000/api/"
 def main(page: ft.Page):
     page.title = "Покупка и управление билетами"
     page.theme_mode = 'light'
+    page.scroll = "adaptive"
 
     # Функция для отправки POST запроса к API
     def post_data(endpoint, data):
         response = requests.post(f"{BASE_URL}{endpoint}/", json=data)
         return response.status_code == 201
+
+    # Функция для отправки GET запроса к API
+    def get_data(endpoint):
+        response = requests.get(f"{BASE_URL}{endpoint}/")
+        if response.status_code == 200:
+            return response.json()
+        else:
+            return None
 
     # Добавление билета
     def add_ticket(e):
@@ -38,6 +47,25 @@ def main(page: ft.Page):
             page.snack_bar = ft.SnackBar(content=ft.Text("Ошибка при добавлении билета"))
         page.snack_bar.open = True
 
+    # Просмотр билета
+    def view_ticket(e):
+        ticket_id = ticket_id_field.value
+        ticket_data = get_data(f'tickets/{ticket_id}')
+        if ticket_data:
+            ticket_info.value = f"""
+            ID билета: {ticket_data['id']}
+            Поезд: {ticket_data['train']}
+            Вагон: {ticket_data['car']}
+            Номер места: {ticket_data['seat_number']}
+            Пассажир: {ticket_data['passenger']}
+            Кассир: {ticket_data['cashier']}
+            Цена: {ticket_data['price']}
+            Дата продажи: {ticket_data['sale_date']}
+            """
+        else:
+            ticket_info.value = "Билет не найден"
+        page.update()
+
     # UI элементы для добавления билета
     train_id_field = ft.TextField(label="ID поезда")
     car_id_field = ft.TextField(label="ID вагона")
@@ -49,6 +77,11 @@ def main(page: ft.Page):
 
     add_ticket_button = ft.ElevatedButton(text="Добавить билет", on_click=add_ticket)
 
+    # UI элементы для просмотра билета
+    ticket_id_field = ft.TextField(label="ID билета")
+    view_ticket_button = ft.ElevatedButton(text="Просмотр билета", on_click=view_ticket)
+    ticket_info = ft.Text()
+
     # Размещение UI элементов на странице
     page.add(
         ft.Text("Добавление билета"),
@@ -59,10 +92,25 @@ def main(page: ft.Page):
         cashier_id_field,
         price_field,
         sale_date_field,
-        add_ticket_button
+        add_ticket_button,
+        ft.Divider(),
+        ft.Text("Просмотр билета"),
+        ticket_id_field,
+        view_ticket_button,
+        ticket_info,
+        ft.Divider(),
     )
 
 ft.app(target=main)
+
+
+
+
+
+
+
+
+
 
 
 
